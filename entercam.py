@@ -9,7 +9,7 @@ conn = pymysql.connect(host='localhost',
         password='1150',
         db='test',
         charset='utf8')
-print("coonect success")
+print("MySQL coonected well")
 
 # load models
 model_path = 'models/opencv_face_detector_uint8.pb'
@@ -47,7 +47,7 @@ def encode_face(img_path):
       y2 = int(dets[0, 0, i, 6] * h)
 
   if len(dets) == 0 or len(dets) > 1:
-    raise Exception('There\'s no faces or more than 1 faces in %s' % img_path)
+    raise Exception('There is no face or more than 1 faces in %s' % img_path)
   else:
     print("face detected")
 
@@ -87,8 +87,11 @@ while cap.isOpened():
   now = datetime.datetime.now()
   time = now.strftime('%Y-%m-%d %H:%M:%S')
   time_for_check = now.strftime('%H%M')
-  check = 'late or not'
+  time_for_tables = now.strftime('%Y_%m_%d')
+  time_for_table = "a" + time_for_tables
 
+  # Check Late or not
+  check = 'late or not'
   if(int(time_for_check) > 900 and int(time_for_check) < 1700):
     check = "late"
   else:
@@ -151,19 +154,18 @@ while cap.isOpened():
       # visualize
       cv2.rectangle(result_img, (x1, y1), (x2, y2), found['color'] , int(round(h/150)), cv2.LINE_AA)
       cv2.putText(result_img, found['name'], (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1,found['color'] , 2, cv2.LINE_AA)
-
+  
   cv2.imshow('result', result_img)
   user = found['name']
-  print(user)
+
+  # Send data to DB
   with conn.cursor() as cursor:
-    sql = 'UPDATE user SET hitime = (%s), checkingT = (%s) WHERE name = (%s)'
+    table = time_for_table
+    sql = "UPDATE " + table +" SET hitime = (%s), attendance = (%s) WHERE name = (%s)"
     cursor.execute(sql, (time, check, user))
     conn.commit()
 
-  print("sended to db")
-  print(time_for_check)
-  print(check+"\n")
-
+  print(user + "'s history sended to db, " + check)
 
   if cv2.waitKey(1) == ord('q'):
     break

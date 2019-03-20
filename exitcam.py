@@ -9,7 +9,7 @@ conn = pymysql.connect(host='localhost',
         password='1150',
         db='test',
         charset='utf8')
-print("coonect success")
+print("MySQL coonected well")
 
 # load models
 model_path = 'models/opencv_face_detector_uint8.pb'
@@ -47,7 +47,7 @@ def encode_face(img_path):
       y2 = int(dets[0, 0, i, 6] * h)
 
   if len(dets) == 0 or len(dets) > 1:
-    raise Exception('There\'s no faces or more than 1 faces in %s' % img_path)
+    raise Exception('There is no face or more than 1 faces in %s' % img_path)
   else:
     print("face detected")
 
@@ -82,8 +82,20 @@ video_size = (resized_width, int(img_bgr.shape[0] * resized_width // img_bgr.sha
 output_size = (resized_width, int(img_bgr.shape[0] * resized_width // img_bgr.shape[1] + padding_size * 2))
 
 while cap.isOpened():
+
+  # Check time
   now = datetime.datetime.now()
   time = now.strftime('%Y-%m-%d %H:%M:%S')
+  time_for_check = now.strftime('%H%M')
+  time_for_tables = now.strftime('%Y_%m_%d')
+  time_for_table = "a" + time_for_tables
+
+  # Check Late or not
+  check = 'late or not'
+  if(int(time_for_check) > 900 and int(time_for_check) < 1700):
+    check = "late"
+  else:
+    check = "good"
 
   ret, img_bgr = cap.read()
   if not ret:
@@ -107,7 +119,6 @@ while cap.isOpened():
       y1 = int(dets[0, 0, i, 4] * h)
       x2 = int(dets[0, 0, i, 5] * w)
       y2 = int(dets[0, 0, i, 6] * h)
-
   for k, d in enumerate(dets):
     d = dlib.rectangle(x1,y1,x2,y2)
     shape = sp(img_rgb, d)
@@ -142,16 +153,18 @@ while cap.isOpened():
       # visualize
       cv2.rectangle(result_img, (x1, y1), (x2, y2), found['color'] , int(round(h/150)), cv2.LINE_AA)
       cv2.putText(result_img, found['name'], (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1,found['color'] , 2, cv2.LINE_AA)
-
+  
   cv2.imshow('result', result_img)
   user = found['name']
+
+  # Send data to DB
   with conn.cursor() as cursor:
-    sql = 'UPDATE user SET byetime = (%s) WHERE name = (%s)'
-    cursor.execute(sql, (time,user))
+    table = time_for_table
+    sql = "UPDATE " + table +" SET byetime = (%s) WHERE name = (%s)"
+    cursor.execute(sql, (time, user))
     conn.commit()
 
   print(user + "'s history sended to db")
-    
 
   if cv2.waitKey(1) == ord('q'):
     break
