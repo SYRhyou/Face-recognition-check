@@ -1,5 +1,15 @@
 import dlib, cv2
 import numpy as np
+import pymysql.cursors
+import datetime
+
+# connect to db
+conn = pymysql.connect(host='localhost',
+        user='root',
+        password='1150',
+        db='test',
+        charset='utf8')
+print("coonect success")
 
 # load models
 model_path = 'models/opencv_face_detector_uint8.pb'
@@ -50,9 +60,11 @@ def encode_face(img_path):
 # # make database
 
 descs = dict()
-descs['Rhyou'] = encode_face('img/Rhyou.jpg')
+descs['21431291'] = encode_face('img/Rhyou.jpg')
 descs['Noh'] = encode_face('img/Noh.jpg')
-descs['Kim'] = encode_face('img/Kim.jpg')
+descs['21628486'] = encode_face('img/Kim.jpg')
+descs['21431505'] = encode_face('img/Lee.jpg')
+
 print("done!")
 
 
@@ -70,6 +82,9 @@ video_size = (resized_width, int(img_bgr.shape[0] * resized_width // img_bgr.sha
 output_size = (resized_width, int(img_bgr.shape[0] * resized_width // img_bgr.shape[1] + padding_size * 2))
 
 while cap.isOpened():
+  now = datetime.datetime.now()
+  time = now.strftime('%Y-%m-%d %H:%M:%S')
+
   ret, img_bgr = cap.read()
   if not ret:
     break
@@ -129,11 +144,16 @@ while cap.isOpened():
       cv2.putText(result_img, found['name'], (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1,found['color'] , 2, cv2.LINE_AA)
 
   cv2.imshow('result', result_img)
-  print(found['dist'])
-  print(found['name'])
+  user = found['name']
+  with conn.cursor() as cursor:
+    sql = 'UPDATE user SET byetime = (%s) WHERE name = (%s)'
+    cursor.execute(sql, (time,user))
+    conn.commit()
+
+  print(user + "'s history sended to db")
+    
+
   if cv2.waitKey(1) == ord('q'):
     break
 
 cap.release()
-
-
