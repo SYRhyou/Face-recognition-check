@@ -61,9 +61,9 @@ def encode_face(img_path):
 
 descs = dict()
 descs['21431291'] = encode_face('img/Rhyou.jpg')
-descs['Noh'] = encode_face('img/Noh.jpg')
 descs['21628486'] = encode_face('img/Kim.jpg')
 descs['21431505'] = encode_face('img/Lee.jpg')
+descs['21431822'] = encode_face('img/Yoon.jpg')
 
 print("done!")
 
@@ -133,7 +133,7 @@ while cap.isOpened():
       dist = np.linalg.norm([face_descriptor] - saved_desc, axis=1)      
       
       if dist < found['dist']:
-        found = {'name': name, 'dist': dist, 'color': (255,255,255)}
+        found = {'name': name, 'dist': dist, 'color': (0,255,0)}
         if(found['name'] == 'unknown'):
           found = {'name': 'unknown', 'dist': dist, 'color': (0,0,255)}
   # find faces
@@ -156,16 +156,16 @@ while cap.isOpened():
       cv2.putText(result_img, found['name'], (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1,found['color'] , 2, cv2.LINE_AA)
   
   cv2.imshow('result', result_img)
-  user = found['name']
+  eno = found['name']
 
   # Send data to DB
   with conn.cursor() as cursor:
     table = time_for_table
-    sql = "UPDATE " + table +" SET hitime = (%s), attendance = (%s) WHERE name = (%s)"
-    cursor.execute(sql, (time, check, user))
+    sql = "UPDATE " + table +" SET ENTER_TIME = (%s), ATTENDANCE = (%s) WHERE ENO = (%s)"
+    cursor.execute(sql, (time, check, eno))
     conn.commit()
 
-  print(user + "'s history sended to db, " + check)
+  print(eno + "'s history sended to db, " + check)
 
   if cv2.waitKey(1) == ord('q'):
     break

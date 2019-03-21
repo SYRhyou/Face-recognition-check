@@ -26,17 +26,20 @@ class AsyncTask:
 
             print(newday)
 
-            if newday=='20_27_30':
+            if newday=='17_18_00':
 
                 ## Create Table
                 with conn.cursor() as cursor:
                     sql = '''
                         CREATE TABLE ''' + str_time + ''' (
-                            name varchar(45) NOT NULL,
-                            hitime varchar(45) NULL,
-                            byetime varchar(45) NULL,
-                            attendance varchar(45) NULL,
-                            primary key(name)
+                            ENO varchar(45) NOT NULL,
+                            NAME varchar(45) NULL,
+                            DEPARTMENT varchar(45) NULL,
+                            POSITION varchar(45) NULL,
+                            ENTER_TIME varchar(45) NULL,
+                            EXIT_TIME varchar(45) NULL,
+                            ATTENDANCE varchar(45) NULL,
+                            primary key(ENO)
                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8
                     '''
                     cursor.execute(sql)
@@ -45,7 +48,7 @@ class AsyncTask:
                 
                 ## Create worker's list at table
                 with conn.cursor() as cursor:
-                    sql = 'INSERT INTO ' + str_time + ' (name) SELECT name FROM list'
+                    sql = 'INSERT INTO ' + str_time + ' (ENO, NAME, DEPARTMENT, POSITION) SELECT * FROM list'
                     cursor.execute(sql)
                 conn.commit()
                 print("worker's list created")
