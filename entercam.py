@@ -6,8 +6,8 @@ import datetime
 # connect to db
 conn = pymysql.connect(host='localhost',
         user='root',
-        password='1150',
-        db='test',
+        password='438520',
+        db='fbtpduf',
         charset='utf8')
 print("MySQL coonected well")
 
@@ -171,3 +171,4 @@ while cap.isOpened():
     break
 
 cap.release()
+

@@ -12,8 +12,8 @@ class AsyncTask:
         b = 0
         conn = pymysql.connect(host='localhost',
                                        user='root',
-                                       password='1150',
-                                       db='test',
+                                       password='438520',
+                                       db='fbtpduf',
                                        charset='utf8')
         print("MySQL coonected well")
 
@@ -26,7 +26,7 @@ class AsyncTask:
 
             print(newday)
 
-            if newday=='17_18_00':
+            if newday=='15_58_00':
 
                 ## Create Table
                 with conn.cursor() as cursor:

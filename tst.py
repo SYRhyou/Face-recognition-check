@@ -6,8 +6,8 @@ import datetime
 # connect to db
 conn = pymysql.connect(host='localhost',
         user='root',
-        password='438520',
-        db='fbtpduf',
+        password='1150',
+        db='test',
         charset='utf8')
 print("MySQL coonected well")
 
@@ -23,13 +23,30 @@ facerec = dlib.face_recognition_model_v1('models/dlib_face_recognition_resnet_mo
 conf_threshold = 0.8
 
 
+
 # find face and landmarks in image and encode face descriptor
 def encode_face(img_path):
 
   img_bgr = cv2.imread(img_path, cv2.IMREAD_COLOR)
   img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-  # find face
+  find_face()
+
+  if len(dets) == 0 or len(dets) > 1:
+    raise Exception('There is no face or more than 1 faces in %s' % img_path)
+  else:
+    print("face detected")
+
+  for k, d in enumerate(dets):
+    d = dlib.rectangle(x1,y1,x2,y2)
+    shape = sp(img_rgb, d)
+    face_descriptor = facerec.compute_face_descriptor(img_rgb, shape)
+    return np.array(face_descriptor)
+
+def find_face():
+    # find face
+  img_bgr = cv2.imread(img_path, cv2.IMREAD_COLOR)
+  img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
   result_img = img_rgb.copy()
   h, w, _ = result_img.shape
   blob = cv2.dnn.blobFromImage(result_img, 1.0, (300, 300), [104, 117, 123], False, False)
@@ -46,19 +63,7 @@ def encode_face(img_path):
       x2 = int(dets[0, 0, i, 5] * w)
       y2 = int(dets[0, 0, i, 6] * h)
 
-  if len(dets) == 0 or len(dets) > 1:
-    raise Exception('There is no face or more than 1 faces in %s' % img_path)
-  else:
-    print("face detected")
-
-  for k, d in enumerate(dets):
-    d = dlib.rectangle(x1,y1,x2,y2)
-    shape = sp(img_rgb, d)
-    face_descriptor = facerec.compute_face_descriptor(img_rgb, shape)
-    return np.array(face_descriptor)
-
 # # make database
-
 descs = dict()
 descs['21431291'] = encode_face('img/Rhyou.jpg')
 descs['21628486'] = encode_face('img/Kim.jpg')
@@ -119,6 +124,7 @@ while cap.isOpened():
       y1 = int(dets[0, 0, i, 4] * h)
       x2 = int(dets[0, 0, i, 5] * w)
       y2 = int(dets[0, 0, i, 6] * h)
+
   for k, d in enumerate(dets):
     d = dlib.rectangle(x1,y1,x2,y2)
     shape = sp(img_rgb, d)
@@ -160,11 +166,11 @@ while cap.isOpened():
   # Send data to DB
   with conn.cursor() as cursor:
     table = time_for_table
-    sql = "UPDATE " + table +" SET EXIT_TIME = (%s) WHERE ENO = (%s)"
-    cursor.execute(sql, (time, eno))
+    sql = "UPDATE " + table +" SET ENTER_TIME = (%s), ATTENDANCE = (%s) WHERE ENO = (%s)"
+    cursor.execute(sql, (time, check, eno))
     conn.commit()
 
-  print(eno + "'s history sended to db")
+  print(eno + "'s history sended to db, " + check)
 
   if cv2.waitKey(1) == ord('q'):
     break
